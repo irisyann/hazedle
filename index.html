@@ -112,7 +112,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="hud">
       <div class="brand">
         <h1>Hazedle<small>Malaysia edition</small></h1>
-        <div class="stamp" id="stamp">Cheras, KL<br>19 Oct, 6pm</div>
+        <div class="stamp" id="stamp">Kuala Lumpur<br>19 Oct, 6pm</div>
       </div>
       <div class="reveal" id="reveal"><div class="n" id="revN"></div><div class="b" id="revB"></div></div>
     </div>
@@ -206,7 +206,7 @@ function load(){
 function save(){ if(mode!=="today") return; try{localStorage.setItem(skey(),JSON.stringify({g:guesses}));}catch(e){} }
 
 const sel=$("stateSel");
-STATES.forEach(s=>{ const o=document.createElement("option"); o.value=s.id; o.textContent=s.name+": "+s.place; sel.appendChild(o); });
+STATES.forEach(s=>{ const o=document.createElement("option"); o.value=s.id; o.textContent=s.name; sel.appendChild(o); });
 sel.value=cur.id;
 sel.addEventListener("change",()=>{
   cur=STATES.find(s=>s.id===sel.value)||STATES[0];
@@ -227,7 +227,7 @@ function temp(d){
 function start(m){
   mode=m; done=false;
   answer=cur.api; guesses=load(); scene=cur.id;
-  $("stamp").textContent=""; $("stamp").append(cur.place===cur.name?cur.name:cur.place+", "+(cur.short||cur.name), document.createElement("br"), DAY.when);
+  $("stamp").textContent=""; $("stamp").append(cur.name, document.createElement("br"), DAY.when);
   buildCity();
   targetHaze=answer;
   $("reveal").classList.remove("on");
@@ -274,7 +274,7 @@ function render(){
   if(done){
     const [b]=band(answer);
     $("endH").textContent = won? (guesses.length===1?"First try!":"Got it in "+guesses.length) : "Lost in the haze";
-    $("endP").textContent = cur.place+" was "+answer+" ("+b.toLowerCase()+")."+(won?"":" You were "+Math.min(...guesses.map(g=>Math.abs(g-answer)))+" off :(");
+    $("endP").textContent = cur.name+" was "+answer+" ("+b.toLowerCase()+")."+(won?"":" You were "+Math.min(...guesses.map(g=>Math.abs(g-answer)))+" off :(");
     $("revN").textContent=answer; $("revB").textContent=b;
     const T = answer>300 ? ["Hazardous air. Stay indoors if you can.",["Stay indoors and keep windows shut","Wear an N95 mask if you must go out","Run an air purifier if you have one","Drink plenty of water","See a doctor if breathing gets hard"]]
       : answer>200 ? ["Very unhealthy air. Take care out there.",["Stay indoors as much as you can","Wear an N95 mask outside","Skip outdoor exercise","Drink plenty of water","Check on kids, elderly and anyone with asthma"]]
