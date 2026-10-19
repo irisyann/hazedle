@@ -1,0 +1,567 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Hazedle Malaysia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one tall phone screen. Haze canvas on top, guess console docked below, guess log scrolls inside. Single committed look: an afternoon of jerebu (haze). */
+:root{
+  --ink:#1d1912;          /* console text */
+  --paper:#efe6d2;        /* console ground, sun-bleached */
+  --paper-2:#e3d7bd;
+  --rule:#c9b994;
+  --smog:#8a7a5c;         /* muted label */
+  --ember:#c4471d;        /* hot */
+  --frost:#2f6f8f;        /* cold */
+  --good:#2f8a4a; --mod:#c9a227; --unh:#d06a1e; --vunh:#a3243b; --haz:#5a1f3f;
+  --display:"Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body:"Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+*{box-sizing:border-box}
+.app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+.sky{position:relative;width:100%;aspect-ratio:4/5;max-height:58vh;overflow:hidden;background:#cbbf9f}
+.sky canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;inset:0;padding:14px max(16px, env(safe-area-inset-left,0px)) 14px max(16px, env(safe-area-inset-right,0px));display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+.brand{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.brand h1{margin:0;font-family:var(--display);font-weight:900;font-size:44px;line-height:.85;letter-spacing:.01em;color:#fffaf0;text-shadow:0 1px 0 rgba(60,40,10,.35);text-transform:uppercase}
+.brand h1 small{display:block;font-size:15px;font-weight:600;letter-spacing:.18em;margin-top:6px;opacity:.9}
+.stamp{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#fffaf0;background:rgba(40,28,10,.38);padding:6px 8px;border-radius:3px;text-align:right;line-height:1.35}
+.reveal{align-self:flex-start;font-family:var(--display);font-weight:900;color:#fffaf0;text-shadow:0 2px 12px rgba(40,20,0,.45);opacity:0;transform:translateY(8px);transition:opacity .6s,transform .6s}
+.reveal.on{opacity:1;transform:none}
+.reveal .n{font-size:88px;line-height:.85}
+.reveal .b{font-family:var(--body);font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase}
+
+.console{flex:1;display:flex;flex-direction:column;gap:14px;padding-block:16px 20px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));background:var(--paper)}
+.prompt{margin:0;font-size:15px;text-wrap:balance}
+.prompt b{font-weight:700}
+
+.dial{display:flex;flex-direction:column;gap:8px}
+.readout{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.readout output{font-family:var(--display);font-weight:800;font-size:56px;line-height:1;font-variant-numeric:tabular-nums}
+.readout .band{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--smog)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--good) 0 10%,var(--mod) 10% 20%,var(--unh) 20% 40%,var(--vunh) 40% 60%,var(--haz) 60% 100%)}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--good) 0 10%,var(--mod) 10% 20%,var(--unh) 20% 40%,var(--vunh) 40% 60%,var(--haz) 60% 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:var(--paper);border:3px solid var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--paper);border:3px solid var(--ink)}
+.ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--smog);font-variant-numeric:tabular-nums;position:relative;height:12px}
+.ticks span{position:absolute;transform:translateX(-50%)}
+.row{display:flex;gap:8px}
+.nudge{width:48px;font:700 20px var(--body);border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);border-radius:10px;cursor:pointer}
+.go{flex:1;font:700 17px var(--body);border:0;border-radius:10px;background:var(--ink);color:var(--paper);padding:14px;cursor:pointer;letter-spacing:.02em}
+.go:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--frost);outline-offset:2px}
+
+.therm{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--paper-2)}
+.therm .word{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;text-transform:uppercase;min-width:0}
+.therm .sub{font-size:13px;color:var(--smog)}
+.bar{flex:0 0 auto;width:12px;height:46px;border-radius:6px;background:#d8cbae;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;right:0;bottom:0;border-radius:6px;background:var(--ember);transition:height .5s,background .5s}
+
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.log-h{display:grid;grid-template-columns:28px 54px 1fr 92px;gap:8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--smog);padding-bottom:4px;border-bottom:1px solid var(--rule)}
+.log-h span:last-child{text-align:right}
+.log li{display:grid;grid-template-columns:28px 54px 1fr 92px;align-items:center;gap:8px;font-size:14px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.log .i{font-family:var(--mono);font-size:11px;color:var(--smog)}
+.log .g{font-family:var(--display);font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}
+.log .t{font-weight:600;text-align:right}
+.meter{height:8px;border-radius:4px;background:var(--paper-2);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:4px}
+.state{display:flex;flex-direction:column;gap:4px}
+.state label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--smog)}
+.state select{width:100%;font:600 16px var(--body);color:var(--ink);background:var(--paper-2);border:1px solid var(--rule);border-radius:10px;padding:11px 12px;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat}
+.state select:focus-visible{outline:3px solid var(--frost);outline-offset:2px}
+.state select:disabled{opacity:.45}
+.hot{color:var(--ember)} .cold{color:var(--frost)}
+.left{font-family:var(--mono);font-size:12px;color:var(--smog)}
+
+.end{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--rule);border-radius:12px}
+.end h2{margin:0;font-family:var(--display);font-weight:900;font-size:28px;text-transform:uppercase;line-height:1}
+.end p{margin:0;font-size:14px}
+.end .row button{flex:1;font:600 14px var(--body);padding:11px;border-radius:10px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.end .row button.pri{background:var(--ink);color:var(--paper)}
+.legend{font-size:12px;color:var(--smog);line-height:1.5}
+.legend b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.reveal,.bar i{transition:none}}
+</style>
+
+<div class="app">
+  <div class="sky" id="sky">
+    <canvas id="cv" aria-label="Kuala Lumpur skyline under haze"></canvas>
+    <div class="hud">
+      <div class="brand">
+        <h1>Hazedle<small>Malaysia edition</small></h1>
+        <div class="stamp" id="stamp">Cheras, KL<br>19 Oct, 6pm</div>
+      </div>
+      <div class="reveal" id="reveal"><div class="n" id="revN"></div><div class="b" id="revB"></div></div>
+    </div>
+  </div>
+
+  <div class="console">
+    <div class="state">
+      <label for="stateSel">State</label>
+      <select id="stateSel"></select>
+    </div>
+    <p class="prompt" id="prompt">Look at the haze. Guess the <b>API</b>. Get within 3 to win.</p>
+
+    <div class="dial" id="dial">
+      <div class="readout"><output id="val" for="rng">120</output><span class="band" id="valBand">Unhealthy</span></div>
+      <input type="range" id="rng" min="0" max="500" step="1" value="120" aria-label="Your API guess">
+      <div class="ticks"><span style="left:0%">0</span><span style="left:10%">50</span><span style="left:20%">100</span><span style="left:40%">200</span><span style="left:60%">300</span><span style="left:100%">500</span></div>
+      <div class="row">
+        <button class="nudge" id="minus" aria-label="Lower by 1">−</button>
+        <button class="go" id="go">Guess</button>
+        <button class="nudge" id="plus" aria-label="Raise by 1">+</button>
+      </div>
+    </div>
+
+    <div class="therm" id="therm" hidden>
+      <div class="bar"><i id="barFill"></i></div>
+      <div style="min-width:0"><div class="word" id="tWord"></div><div class="sub" id="tSub"></div></div>
+    </div>
+
+    <div class="end" id="end" hidden>
+      <h2 id="endH"></h2>
+      <p id="endP"></p>
+      <div class="row">
+        <button class="pri" id="share">Share</button>
+        <button id="again">Another state</button>
+      </div>
+    </div>
+
+    <div class="left" id="left">8 tries left</div>
+    <div class="log-h" id="logH" hidden><span>#</span><span>Guess</span><span>How close</span><span></span></div>
+    <ol class="log" id="log"></ol>
+
+    <p class="legend"><b>0–50</b> good · <b>51–100</b> moderate · <b>101–200</b> unhealthy · <b>201–300</b> very unhealthy · <b>300+</b> hazardous. Readings from JAS, 6pm 19 Oct.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+// DOE hourly readings, 6pm 19 Oct 2026, best-known city or destination per state (via semakapi.my)
+const DAY = {key:"2026-10-19", when:"19 Oct, 6pm"};
+const STATES = [
+  {id:"kl", name:"Kuala Lumpur", short:"KL", place:"Cheras", api:156},
+  {id:"johor", name:"Johor", place:"Johor Bahru", station:"Larkin", api:151},
+  {id:"kedah", name:"Kedah", place:"Langkawi", api:49},
+  {id:"kelantan", name:"Kelantan", place:"Kota Bharu", api:55},
+  {id:"labuan", name:"Labuan", place:"Labuan", api:52},
+  {id:"melaka", name:"Melaka", place:"Melaka City", station:"Bandaraya Melaka", api:160},
+  {id:"ns", name:"Negeri Sembilan", short:"N. Sembilan", place:"Port Dickson", api:105},
+  {id:"pahang", name:"Pahang", place:"Kuantan", station:"Indera Mahkota", api:152},
+  {id:"penang", name:"Penang", place:"George Town", station:"Minden", api:87},
+  {id:"perak", name:"Perak", place:"Ipoh", station:"Tasek", api:152},
+  {id:"perlis", name:"Perlis", place:"Kangar", api:53},
+  {id:"putrajaya", name:"Putrajaya", place:"Putrajaya", api:154},
+  {id:"sabah", name:"Sabah", place:"Kota Kinabalu", api:58},
+  {id:"sarawak", name:"Sarawak", place:"Kuching", api:94},
+  {id:"selangor", name:"Selangor", place:"Petaling Jaya", api:160},
+  {id:"terengganu", name:"Terengganu", place:"Kuala Terengganu", api:67}
+];
+let cur = STATES[0];
+try{ const s=localStorage.getItem("jerebu-state"); const f=STATES.find(x=>x.id===s); if(f) cur=f; }catch(e){}
+const MAX = 8, WIN = 3;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = id => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d");
+
+function band(v){
+  if(v<=50) return ["Good","--good"];
+  if(v<=100) return ["Moderate","--mod"];
+  if(v<=200) return ["Unhealthy","--unh"];
+  if(v<=300) return ["Very unhealthy","--vunh"];
+  return ["Hazardous","--haz"];
+}
+
+/* ---------- game state ---------- */
+let mode="today", answer=cur.api, guesses=[], done=false, shownHaze=cur.api, targetHaze=cur.api;
+const skey=()=>"jerebu-"+DAY.key+"-"+cur.id+"-city";
+function load(){
+  try{ const s=JSON.parse(localStorage.getItem(skey())||"null"); if(s&&Array.isArray(s.g)) return s.g; }catch(e){}
+  return [];
+}
+function save(){ if(mode!=="today") return; try{localStorage.setItem(skey(),JSON.stringify({g:guesses}));}catch(e){} }
+
+const sel=$("stateSel");
+STATES.forEach(s=>{ const o=document.createElement("option"); o.value=s.id; o.textContent=s.name+": "+s.place; sel.appendChild(o); });
+sel.value=cur.id;
+sel.addEventListener("change",()=>{
+  cur=STATES.find(s=>s.id===sel.value)||STATES[0];
+  try{localStorage.setItem("jerebu-state",cur.id);}catch(e){}
+  start("today");
+});
+
+function temp(d){
+  if(d<=WIN) return ["Spot on","hot",1];
+  if(d<=10) return ["Burning","hot",.88];
+  if(d<=25) return ["Hot","hot",.7];
+  if(d<=50) return ["Warm","hot",.5];
+  if(d<=90) return ["Cool","cold",.3];
+  if(d<=150) return ["Cold","cold",.15];
+  return ["Freezing","cold",.05];
+}
+
+function start(m){
+  mode=m; done=false;
+  answer=cur.api; guesses=load(); scene=cur.id;
+  $("stamp").textContent=""; $("stamp").append(cur.place===cur.name?cur.name:cur.place+", "+(cur.short||cur.name), document.createElement("br"), DAY.when);
+  buildCity();
+  targetHaze=answer;
+  $("reveal").classList.remove("on");
+  render();
+  if(reduce){ shownHaze=targetHaze; requestAnimationFrame(frame); }
+}
+
+function render(){
+  const log=$("log"); log.textContent="";
+  $("logH").hidden = guesses.length===0;
+  guesses.forEach((g,i)=>{
+    const d=Math.abs(g-answer), [w,c,f]=temp(d);
+    const li=document.createElement("li");
+    li.innerHTML=`<span class="i">#${i+1}</span><span class="g"></span><span class="meter"><i></i></span><span class="t ${c}"></span>`;
+    li.querySelector(".g").textContent=g;
+    li.querySelector(".t").textContent=w;
+    const m=li.querySelector(".meter i"); m.style.width=(f*100)+"%"; m.style.background=c==="hot"?"var(--ember)":"var(--frost)";
+    log.prepend(li);
+  });
+  const last=guesses[guesses.length-1];
+  const won = last!==undefined && Math.abs(last-answer)<=WIN;
+  done = won || guesses.length>=MAX;
+  if(last!==undefined){
+    const d=Math.abs(last-answer), [w,c,f]=temp(d);
+    $("therm").hidden=false;
+    let word=w, cls=c, sub;
+    if(won){ sub="Nailed it."; }
+    else if(guesses.length===1){ sub="Next guess tells you hotter or colder."; }
+    else {
+      const pg=guesses[guesses.length-2], pd=Math.abs(pg-answer);
+      if(d<pd){ word="Hotter"; cls="hot"; sub="Closer than "+pg+"."; }
+      else if(d>pd){ word="Colder"; cls="cold"; sub="Further than "+pg+"."; }
+      else { word="Same"; cls=""; sub="Same as "+pg+"."; }
+    }
+    $("tWord").textContent=word; $("tWord").className="word "+cls;
+    $("tSub").textContent=sub;
+    $("barFill").style.height=(f*100)+"%";
+    $("barFill").style.background=c==="hot"?"var(--ember)":"var(--frost)";
+  } else $("therm").hidden=true;
+
+  $("left").textContent = done? "" : (MAX-guesses.length)+" tr"+(MAX-guesses.length===1?"y":"ies")+" left";
+  $("dial").hidden=done;
+  $("end").hidden=!done;
+  if(done){
+    const [b]=band(answer);
+    $("endH").textContent = won? (guesses.length===1?"First try!":"Got it in "+guesses.length) : "Lost in the haze";
+    $("endP").textContent = cur.place+" was "+answer+". "+b+"."+(won?"":" You were "+Math.min(...guesses.map(g=>Math.abs(g-answer)))+" off.");
+    $("revN").textContent=answer; $("revB").textContent=b;
+    $("reveal").classList.add("on");
+    targetHaze = won? Math.max(0,answer*0.35) : answer; // a win lifts some of the haze
+  }
+}
+
+function setVal(v){
+  v=Math.max(0,Math.min(500,v|0)); $("rng").value=v; $("val").textContent=v;
+  const [b,c]=band(v); $("valBand").textContent=b; $("valBand").style.color=`var(${c})`;
+}
+$("rng").addEventListener("input",e=>setVal(+e.target.value));
+$("minus").onclick=()=>setVal(+$("rng").value-1);
+$("plus").onclick=()=>setVal(+$("rng").value+1);
+$("go").onclick=()=>{ if(done) return; guesses.push(+$("rng").value); save(); render(); if(reduce) requestAnimationFrame(frame); };
+$("again").onclick=()=>{ sel.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"}); sel.focus(); };
+$("share").onclick=async()=>{
+  const rows=guesses.map((g,i)=>{const d=Math.abs(g-answer);return d<=WIN?"🟩":d<=25?"🟧":d<=90?"🟨":"🟦";}).join("");
+  const won=Math.abs(guesses[guesses.length-1]-answer)<=WIN;
+  const txt=`Hazedle Malaysia, ${cur.name} ${DAY.key}: ${won?guesses.length:"X"}/${MAX}\n${rows}`;
+  try{ await navigator.clipboard.writeText(txt); $("share").textContent="Copied!"; }
+  catch(e){ $("share").textContent="Couldn't copy"; }
+  setTimeout(()=>$("share").textContent="Share",1600);
+};
+
+/* ---------- skyline ---------- */
+let W=0,H=0,DPR=1, scene="kl", city=null;
+function rnd(seed){ return ()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; }; }
+
+/* Each scene: hills behind, three building rows (far/mid/near), optional water and beach,
+   and landmark silhouettes placed on a layer (0 far, 1 mid, 2 near). x is a fraction of width,
+   k is a size multiplier. Heights in fractions of the canvas height. */
+const SCENES={
+  kl:{seed:1957, far:[.12,.3], mid:[.1,.34], near:{type:"city",h:[.06,.2]},
+      marks:[["twin",.36,1,1],["tower",.66,.95,1]]},
+  selangor:{seed:31, far:[.12,.26], mid:[.08,.2], midX:[-.05,.48], near:{type:"city",h:[.03,.08]},
+      marks:[["mosque",.72,1.35,1,{min:4}]]},
+  johor:{seed:77, water:.87, far:[.1,.22], mid:[.08,.28], midX:[-.05,.62],
+      marks:[["clock",.24,1.1,1],["bridge",0,1,2,{x0:.5,x1:1.05}]]},
+  melaka:{seed:12, water:.88, far:[.04,.1], mid:[.04,.11],
+      marks:[["ringtower",.6,1,1],["ship",.24,1,2]]},
+  ns:{seed:5, water:.78, beach:.9, hills:{type:"rolling",h:.08,x:[.55,1.05]}, far:null, mid:[.03,.08], midX:[.5,1.05],
+      near:{type:"palms",n:5}},
+  pahang:{seed:88, water:.88, hills:{type:"rolling",h:.12}, far:[.05,.14], mid:[.05,.17],
+      marks:[["tower",.3,.85,1],["mosque",.68,.85,1,{min:4}]]},
+  perak:{seed:41, hills:{type:"karst",h:.4}, far:[.03,.1], mid:[.04,.09], near:{type:"shop"},
+      marks:[["station",.5,1,1]]},
+  putrajaya:{seed:62, water:.87, hills:{type:"rolling",h:.07}, far:[.05,.13], mid:[.04,.12],
+      marks:[["mosque",.26,1,1,{min:1,mt:1.6,side:1}],["onion",.6,.95,1],["pylon",.85,.9,2]]},
+  sarawak:{seed:19, water:.86, hills:{type:"peak",h:.24,cx:.82,w:.22}, far:[.03,.08], mid:[.04,.11],
+      marks:[["dun",.42,1,1]]},
+  penang:{seed:23, hills:{type:"rolling",h:.32}, far:[.05,.14], mid:[.05,.15], near:{type:"shop"},
+      marks:[["komtar",.62,1,1]]},
+  terengganu:{seed:54, water:.86, hills:{type:"rolling",h:.07}, far:[.03,.08], mid:[.03,.09],
+      marks:[["crystal",.33,1,1],["drawbridge",.74,1,2]]},
+  sabah:{seed:91, water:.88, hills:{type:"peak",h:.5,cx:.58,w:.42}, far:[.04,.1], mid:[.05,.16],
+      marks:[["cyl",.18,1,1]]},
+  kelantan:{seed:36, hills:{type:"rolling",h:.06}, far:[.03,.08], mid:[.03,.08], near:{type:"kampung"},
+      marks:[["mosque",.6,.75,1,{min:2}]]},
+  perlis:{seed:47, hills:{type:"karst",h:.22}, far:[.02,.05], mid:[.02,.06], midX:[.3,.75], near:{type:"paddy"},
+      marks:[["mosque",.52,.55,1,{min:1}]]},
+  labuan:{seed:73, water:.82, far:[.04,.12], mid:[.05,.2], midX:[-.05,.55],
+      marks:[["rig",.8,.9,2],["clock",.2,.7,1]]},
+  kedah:{seed:15, water:.86, beach:.93, hills:{type:"ridge",h:.42}, far:null, mid:[.02,.05], midX:[-.05,.4],
+      near:{type:"palms",n:3}, marks:[["cable",0,1,1,{x0:.12,x1:.66}]]}
+};
+
+function rowOf(r,hh,x0,x1,wmin,wmax,gap){
+  const b=[]; let x=x0;
+  while(x<x1){ const w=wmin+r()*(wmax-wmin); b.push({x,w,h:hh[0]+r()*(hh[1]-hh[0]),cap:r()<.22?"spire":r()<.4?"step":""}); x+=w+r()*gap; }
+  return b;
+}
+function buildCity(){
+  const c=SCENES[scene]||SCENES.kl, r=rnd(c.seed);
+  const wl=c.water||1;
+  const out={c, water:c.water, beach:c.beach, far:null, mid:null, near:null, hill:null};
+  out.farBase=Math.min(.8,wl); out.midBase=c.water||.86;
+  if(c.far) out.far=rowOf(r,c.far,-.05,1.05,.03,.08,.012);
+  if(c.mid){ const [a,b]=c.midX||[-.05,1.05]; out.mid=rowOf(r,c.mid,a,b,.03,.08,.02); }
+  if(c.near && c.near.type==="city") out.near=rowOf(r,c.near.h,-.05,1.05,.04,.13,.015);
+  if(c.near && c.near.type==="shop") out.near=rowOf(r,[.05,.08],-.05,1.05,.04,.065,.004);
+  if(c.near && c.near.type==="kampung"){ out.near=[]; let x=.02; while(x<1){ out.near.push({x,w:.07+r()*.04,h:.04+r()*.02,palm:r()<.5}); x+=.13+r()*.1; } }
+  if(c.near && c.near.type==="paddy"){ out.near=[]; for(let i=0;i<5;i++) out.near.push({x:r(),w:.05,h:.03,tree:r()<.6}); }
+  if(c.near && c.near.type==="palms"){ out.near=[]; for(let i=0;i<c.near.n;i++) out.near.push({x:.06+i*(.9/c.near.n)+r()*.08,h:.14+r()*.08,lean:(r()-.5)*.08}); }
+  if(c.hills){
+    const h=c.hills, hb=c.water||.86, pts=[], N=160, [hx0,hx1]=h.x||[-.02,1.02];
+    const ph=[r()*6,r()*6,r()*6];
+    const karsts=[]; for(let i=0;i<7;i++) karsts.push({cx:r()*1.1-.05,w:.05+r()*.08,ht:(.45+r()*.55)*h.h});
+    const jag=[]; for(let i=0;i<=N;i++) jag.push(r());
+    let walk=0;
+    for(let i=0;i<=N;i++){
+      const x=hx0+(hx1-hx0)*i/N; let y=0;
+      if(h.type==="rolling") y=h.h*(.55+.25*Math.sin(x*6.3+ph[0])+.15*Math.sin(x*13+ph[1])+.06*Math.sin(x*31+ph[2]));
+      if(h.type==="karst"){ y=h.h*.08; karsts.forEach(k=>{ const u=Math.abs(x-k.cx)/k.w; if(u<1) y=Math.max(y,k.ht*Math.sqrt(1-Math.pow(u,6))); }); }
+      if(h.type==="peak"){ const u=Math.abs(x-h.cx)/h.w; const env=u<1?Math.pow(1-u,.9):0; y=h.h*(env*.82+(env>.62?(.08+.12*jag[i])*(env-.62)/.38*2.2:0))+.015; }
+      if(h.type==="ridge"){ walk+= (jag[i]-.5)*.035; walk*=.9; const env=.35+.65*Math.sin(Math.PI*Math.min(1,Math.max(0,(x+.1)/1.15))); y=h.h*env*(.78+walk*3)+.02; }
+      pts.push([x,hb-Math.max(0,y)]);
+    }
+    out.hill=pts; out.hillBase=hb;
+  }
+  city=out;
+}
+function hillY(x){ const p=city.hill; if(!p) return city.midBase; for(let i=1;i<p.length;i++) if(p[i][0]>=x){ const a=p[i-1],b=p[i],t=(x-a[0])/(b[0]-a[0]); return a[1]+(b[1]-a[1])*t; } return p[p.length-1][1]; }
+
+function resize(){
+  const rc=cv.getBoundingClientRect(); DPR=Math.min(2,devicePixelRatio||1);
+  W=rc.width; H=rc.height; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+function mix(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t));}
+function rgb(c,a){return `rgba(${c[0]},${c[1]},${c[2]},${a})`;}
+function hazeColor(d){
+  const clear=[214,226,232], yel=[205,190,150], brown=[150,118,80];
+  return d<.55? mix(clear,yel,d/.55) : mix(yel,brown,Math.min(1,(d-.55)/.6));
+}
+
+/* ---- landmark silhouettes (x px, b baseline px, s scale px) ---- */
+function poly(p){ ctx.beginPath(); ctx.moveTo(p[0],p[1]); for(let i=2;i<p.length;i+=2) ctx.lineTo(p[i],p[i+1]); ctx.closePath(); ctx.fill(); }
+function minaret(x,b,h,s){ const w=.012*s; ctx.fillRect(x-w/2,b-h,w,h); ctx.fillRect(x-w,b-h*.78,w*2,.006*s); poly([x-w*.7,b-h, x+w*.7,b-h, x,b-h-.035*s]); }
+const MARK={
+  twin(x,b,s){
+    const one=cx=>[[.05,.34],[.044,.40],[.036,.45],[.028,.49],[.018,.52],[.006,.58]].forEach(([w,h])=>ctx.fillRect(cx-w*s/2,b-h*s,w*s,h*s));
+    one(x-.045*s); one(x+.045*s); ctx.fillRect(x-.04*s,b-.27*s,.08*s,.012*s);
+  },
+  tower(x,b,s){
+    ctx.fillRect(x-.006*s,b-.42*s,.012*s,.42*s);
+    ctx.beginPath(); ctx.ellipse(x,b-.40*s,.03*s,.022*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillRect(x-.0015*s,b-.55*s,.003*s,.14*s);
+  },
+  mosque(x,b,s,o={}){
+    const w=.14*s, dh=.07*s, ry=.09*s;
+    ctx.fillRect(x-w/2,b-dh,w,dh);
+    ctx.beginPath(); ctx.ellipse(x,b-dh,w*.42,ry,0,Math.PI,0); ctx.fill();
+    ctx.fillRect(x-.002*s,b-dh-ry-.035*s,.004*s,.035*s);
+    const mh=.24*s*(o.mt||1), n=o.min||0;
+    if(n===1) minaret(x+(o.side?-1:1)*(w/2+.035*s),b,mh,s);
+    if(n>=2){ minaret(x-w/2-.025*s,b,mh,s); minaret(x+w/2+.025*s,b,mh,s); }
+    if(n>=4){ minaret(x-w/2-.075*s,b,mh*.9,s); minaret(x+w/2+.075*s,b,mh*.9,s); }
+  },
+  onion(x,b,s){
+    ctx.fillRect(x-.12*s,b-.07*s,.24*s,.07*s);
+    ctx.fillRect(x-.04*s,b-.11*s,.08*s,.04*s);
+    const r=.045*s, y=b-.11*s;
+    ctx.beginPath(); ctx.moveTo(x-r,y); ctx.bezierCurveTo(x-r*1.6,y-r*1.3,x-r*.15,y-r*1.7,x,y-r*2.7); ctx.bezierCurveTo(x+r*.15,y-r*1.7,x+r*1.6,y-r*1.3,x+r,y); ctx.fill();
+    [-1,1].forEach(sd=>{ ctx.beginPath(); ctx.arc(x+sd*.09*s,b-.07*s,.018*s,Math.PI,0); ctx.fill(); });
+  },
+  clock(x,b,s){
+    ctx.fillRect(x-.11*s,b-.1*s,.22*s,.1*s);
+    ctx.fillRect(x-.028*s,b-.3*s,.056*s,.3*s);
+    ctx.fillRect(x-.034*s,b-.22*s,.068*s,.01*s);
+    poly([x-.034*s,b-.3*s, x+.034*s,b-.3*s, x,b-.36*s]);
+  },
+  ringtower(x,b,s){
+    ctx.fillRect(x-.007*s,b-.44*s,.014*s,.44*s);
+    ctx.fillRect(x-.04*s,b-.36*s,.08*s,.03*s);
+    ctx.fillRect(x-.0015*s,b-.5*s,.003*s,.06*s);
+    ctx.fillRect(x-.03*s,b-.03*s,.06*s,.03*s);
+  },
+  ship(x,b,s){
+    poly([x-.1*s,b-.035*s, x+.11*s,b-.035*s, x+.085*s,b, x-.075*s,b]);
+    ctx.fillRect(x-.1*s,b-.06*s,.05*s,.025*s);
+    [-.03,.02,.07].forEach((m,i)=>{ const mh=(.17-i*.02)*s; ctx.fillRect(x+m*s-.002*s,b-.035*s-mh,.004*s,mh); poly([x+m*s,b-.04*s-mh*.9, x+m*s,b-.05*s, x+m*s-.045*s,b-.05*s]); });
+  },
+  bridge(x,b,s,o){
+    const x0=o.x0*W, x1=o.x1*W;
+    ctx.fillRect(x0,b-.03*s,x1-x0,.008*s);
+    for(let px=x0+.02*W;px<x1;px+=.06*W) ctx.fillRect(px,b-.03*s,.008*s,.03*s);
+  },
+  pylon(x,b,s){
+    ctx.fillRect(x-.2*s,b-.035*s,.4*s,.008*s);
+    ctx.lineWidth=Math.max(2,.012*s); ctx.beginPath(); ctx.moveTo(x-.05*s,b-.03*s); ctx.lineTo(x+.03*s,b-.3*s); ctx.stroke();
+    ctx.lineWidth=1; for(let i=1;i<=6;i++){ ctx.beginPath(); ctx.moveTo(x+.03*s-i*.008*s*.3,b-.3*s+i*.02*s); ctx.lineTo(x-.05*s-i*.022*s,b-.032*s); ctx.stroke(); }
+  },
+  dun(x,b,s){
+    ctx.fillRect(x-.16*s,b-.06*s,.32*s,.06*s);
+    ctx.beginPath(); ctx.moveTo(x-.17*s,b-.055*s); ctx.quadraticCurveTo(x-.03*s,b-.09*s,x,b-.32*s); ctx.quadraticCurveTo(x+.03*s,b-.09*s,x+.17*s,b-.055*s); ctx.fill();
+    ctx.fillRect(x-.0015*s,b-.36*s,.003*s,.05*s);
+  },
+  komtar(x,b,s){
+    ctx.fillRect(x-.09*s,b-.07*s,.18*s,.07*s);
+    poly([x-.035*s,b, x-.035*s,b-.48*s, x-.02*s,b-.5*s, x+.02*s,b-.5*s, x+.035*s,b-.48*s, x+.035*s,b]);
+    ctx.beginPath(); ctx.arc(x+.13*s,b-.03*s,.045*s,Math.PI,0); ctx.fill();
+  },
+  crystal(x,b,s){
+    ctx.fillRect(x-.11*s,b-.05*s,.22*s,.05*s);
+    ctx.beginPath(); ctx.ellipse(x,b-.05*s,.04*s,.05*s,0,Math.PI,0); ctx.fill();
+    [[-.1,.16],[-.05,.22],[.05,.22],[.1,.16]].forEach(([dx,h])=>{ const cx=x+dx*s,w=.014*s; ctx.fillRect(cx-w/2,b-h*s,w,h*s); poly([cx-w*.8,b-h*s, cx+w*.8,b-h*s, cx,b-(h+.06)*s]); });
+  },
+  drawbridge(x,b,s){
+    ctx.fillRect(x-.25*s,b-.04*s,.5*s,.01*s);
+    [-1,1].forEach(sd=>{ const cx=x+sd*.07*s; ctx.fillRect(cx-.018*s,b-.2*s,.036*s,.2*s); poly([cx-.022*s,b-.2*s, cx+.022*s,b-.2*s, cx,b-.25*s]); });
+    ctx.fillRect(x-.07*s,b-.16*s,.14*s,.012*s);
+  },
+  cyl(x,b,s){
+    ctx.fillRect(x-.035*s,b-.46*s,.07*s,.46*s);
+    ctx.beginPath(); ctx.ellipse(x,b-.46*s,.035*s,.01*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillRect(x+.035*s,b-.4*s,.015*s,.4*s);
+    ctx.fillRect(x-.0015*s,b-.52*s,.003*s,.06*s);
+  },
+  rig(x,b,s){
+    [-.06,-.02,.02,.06].forEach(dx=>ctx.fillRect(x+dx*s-.004*s,b-.07*s,.008*s,.07*s));
+    ctx.fillRect(x-.08*s,b-.085*s,.16*s,.018*s);
+    poly([x-.035*s,b-.085*s, x+.005*s,b-.085*s, x-.015*s,b-.24*s]);
+    ctx.lineWidth=Math.max(1.5,.006*s); ctx.beginPath(); ctx.moveTo(x+.08*s,b-.08*s); ctx.lineTo(x+.16*s,b-.17*s); ctx.stroke();
+  },
+  station(x,b,s){
+    const w=.42*s; ctx.fillRect(x-w/2,b-.07*s,w,.07*s);
+    ctx.fillRect(x-.05*s,b-.1*s,.1*s,.03*s);
+    ctx.beginPath(); ctx.arc(x,b-.1*s,.035*s,Math.PI,0); ctx.fill();
+    for(let i=0;i<=8;i++){ const cx=x-w/2+i*w/8; ctx.fillRect(cx-.004*s,b-.09*s,.008*s,.02*s); ctx.beginPath(); ctx.arc(cx,b-.09*s,.011*s,Math.PI,0); ctx.fill(); }
+  },
+  cable(x,b,s,o){
+    const ax=o.x0*W, ay=(city.water||.86)*H-.01*H, bx=o.x1*W, by=hillY(o.x1)*H;
+    ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by+.02*s); ctx.stroke();
+    ctx.fillRect(ax-.02*s,ay-.03*s,.04*s,.03*s); ctx.fillRect(bx-.02*s,by,.04*s,.03*s);
+    for(let t=.18;t<.95;t+=.2){ const gx=ax+(bx-ax)*t, gy=ay+(by+.02*s-ay)*t; ctx.fillRect(gx-.006*s,gy+.004*s,.012*s,.014*s); }
+  }
+};
+
+function drawRow(row,base){ row.forEach(b=>{ const x=b.x*W,w=b.w*W,h=b.h*H; ctx.fillRect(x,base-h,w,h);
+  if(b.cap==="spire") ctx.fillRect(x+w/2-1,base-h-h*.18,2,h*.18);
+  if(b.cap==="step") ctx.fillRect(x+w*.2,base-h-h*.08,w*.6,h*.08); }); }
+function palm(x,b,h,lean,s){
+  const tx=x+lean*W, ty=b-h*H;
+  ctx.lineWidth=Math.max(2,.01*s); ctx.beginPath(); ctx.moveTo(x,b); ctx.quadraticCurveTo(x+lean*W*.2,b-h*H*.6,tx,ty); ctx.stroke();
+  ctx.lineWidth=Math.max(1.5,.006*s);
+  for(let a=0;a<7;a++){ const ang=-Math.PI+a*Math.PI/6, L=.07*s; ctx.beginPath(); ctx.moveTo(tx,ty); ctx.quadraticCurveTo(tx+Math.cos(ang)*L*.6,ty-L*.35,tx+Math.cos(ang)*L,ty+Math.abs(Math.sin(ang))*L*.1+L*.25); ctx.stroke(); }
+}
+function drawNear(c,s){
+  const n=c.near; if(!n||!city.near) return;
+  if(n.type==="city"||n.type==="shop"){
+    city.near.forEach(b=>{ const x=b.x*W,w=b.w*W,h=b.h*H; ctx.fillRect(x,H-h,w,h);
+      if(n.type==="shop") poly([x-1,H-h, x+w+1,H-h, x+w/2,H-h-.025*H]);
+      else { if(b.cap==="spire") ctx.fillRect(x+w/2-1,H-h-h*.18,2,h*.18); if(b.cap==="step") ctx.fillRect(x+w*.2,H-h-h*.08,w*.6,h*.08); } });
+  }
+  if(n.type==="kampung"){
+    ctx.fillRect(0,H-.02*H,W,.02*H);
+    city.near.forEach(k=>{ const x=k.x*W,w=k.w*W,h=k.h*H,by=H-.02*H-.025*H;
+      for(let p=0;p<4;p++) ctx.fillRect(x+p*w/3-1,by,2,.025*H);
+      ctx.fillRect(x,by-h,w,h); poly([x-.01*W,by-h, x+w+.01*W,by-h, x+w/2,by-h-.07*H]);
+      if(k.palm) palm(x+w+.04*W,H-.02*H,.16,.02,s); });
+  }
+  if(n.type==="paddy"){
+    ctx.fillRect(0,H-.05*H,W,.05*H);
+    city.near.forEach(k=>{ const x=k.x*W; if(k.tree){ ctx.beginPath(); ctx.arc(x,H-.07*H,.03*s,0,Math.PI*2); ctx.fill(); ctx.fillRect(x-1.5,H-.07*H,3,.02*H); }
+      else { ctx.fillRect(x,H-.08*H,.05*W,.03*H); poly([x-.01*W,H-.08*H, x+.06*W,H-.08*H, x+.025*W,H-.11*H]); } });
+  }
+  if(n.type==="palms"){ const gb=(c.beach||1)*H+.02*H; city.near.forEach(p=>palm(p.x*W,Math.min(H,gb),p.h,p.lean,s)); }
+}
+
+let t0=performance.now();
+function frame(now){
+  shownHaze += (targetHaze-shownHaze)*0.04;
+  if(!city) buildCity();
+  const c=city.c, d=Math.min(1.35,shownHaze/220), hc=hazeColor(d);
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,rgb(mix([96,150,200],hc,Math.min(1,d*1.1)),1));
+  g.addColorStop(.75,rgb(mix([200,222,236],mix(hc,[235,215,170],.3),Math.min(1,d*1.05)),1));
+  g.addColorStop(1,rgb(hc,1));
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const sx=W*.72, sy=H*.2, sr=Math.min(W,H)*.06, sunA=Math.max(.15,1-d*.7);
+  const sg=ctx.createRadialGradient(sx,sy,0,sx,sy,sr*(3+d*3));
+  sg.addColorStop(0,rgb(mix([255,250,230],[245,150,70],Math.min(1,d)),sunA));
+  sg.addColorStop(.25,rgb(mix([255,240,200],[230,140,70],Math.min(1,d)),sunA*.5));
+  sg.addColorStop(1,rgb(hc,0));
+  ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,sr*(3+d*3),0,7); ctx.fill();
+
+  const s=Math.min(W*1.25,H*1.1);
+  const fog=(a)=>{ const fg=ctx.createLinearGradient(0,H*.15,0,H); fg.addColorStop(0,rgb(hc,a*.85)); fg.addColorStop(1,rgb(hc,Math.min(1,a*1.08))); ctx.fillStyle=fg; ctx.fillRect(0,0,W,H); };
+  const ink=[[70,86,104],[44,52,64],[26,28,32]];
+  const paint=(col)=>{ ctx.fillStyle=rgb(col,1); ctx.strokeStyle=rgb(col,1); };
+  const marks=(L)=>(c.marks||[]).forEach(([t,x,k,layer,o])=>{ if(layer!==L) return;
+    const base = L===2 ? (c.water||1)*H : (L===1?city.midBase:city.farBase)*H; MARK[t](x*W,base,s*k,o||{}); });
+
+  if(city.hill){
+    paint([78,94,92]); ctx.beginPath(); ctx.moveTo(city.hill[0][0]*W,city.hillBase*H+2);
+    city.hill.forEach(p=>ctx.lineTo(p[0]*W,p[1]*H)); ctx.lineTo(city.hill[city.hill.length-1][0]*W,city.hillBase*H+2); ctx.closePath(); ctx.fill();
+    fog(Math.min(.97,.2+d*.85));
+  }
+  paint(ink[0]); if(city.far) drawRow(city.far,city.farBase*H); marks(0);
+  fog(Math.min(.96,.12+d*.86));
+  paint(ink[1]); if(!c.water) ctx.fillRect(0,city.midBase*H,W,H); if(city.mid) drawRow(city.mid,city.midBase*H); marks(1);
+  fog(Math.min(.92,.05+d*.68));
+  if(c.water){
+    const wy=c.water*H, wg=ctx.createLinearGradient(0,wy,0,H);
+    wg.addColorStop(0,rgb(mix(hc,[70,90,105],.35),1)); wg.addColorStop(1,rgb(mix(hc,[40,55,70],.55),1));
+    ctx.fillStyle=wg; ctx.fillRect(0,wy,W,H-wy);
+    ctx.fillStyle=rgb(mix(hc,[255,245,225],.4),.35);
+    for(let i=0;i<6;i++){ const y=wy+(i+1)*(H-wy)/7; ctx.fillRect(W*((i*.37)%1)*.6,y,W*(.2+.05*i),1); }
+    if(c.beach){ ctx.fillStyle=rgb(mix(hc,[214,190,140],.55),1); ctx.fillRect(0,c.beach*H,W,H-c.beach*H); }
+  }
+  paint(ink[2]); drawNear(c,s); marks(2);
+  fog(Math.min(.6,d*.38));
+
+  const tt=reduce?0:(now-t0)/1000;
+  for(let k=0;k<7;k++){
+    const bx=((k*173+tt*(6+k*2))%(W+400))-200, by=H*(.35+k*.08), br=W*(.35+(k%3)*.12);
+    const bg=ctx.createRadialGradient(bx,by,0,bx,by,br);
+    bg.addColorStop(0,rgb(hc,.22*d)); bg.addColorStop(1,rgb(hc,0));
+    ctx.fillStyle=bg; ctx.fillRect(bx-br,by-br,br*2,br*2);
+  }
+  if(!reduce || Math.abs(targetHaze-shownHaze)>.5) requestAnimationFrame(frame);
+}
+addEventListener("resize",()=>{resize(); if(reduce) requestAnimationFrame(frame);});
+resize(); setVal(120); start("today");
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
