@@ -8,7 +8,8 @@
 <meta name="description" content="Look at the haze. Guess the API. A daily air quality game for Malaysia.">
 <meta property="og:title" content="Hazedle Malaysia">
 <meta property="og:description" content="Look at the haze. Guess the API.">
-<meta property="og:image" content="preview.png">
+<meta property="og:image" content="https://irisyann.github.io/hazedle/preview.png">
+<meta property="og:url" content="https://irisyann.github.io/hazedle/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=JetBrains+Mono:wght@500&display=swap">
@@ -289,7 +290,7 @@ $("again").onclick=()=>{ sel.scrollIntoView({behavior:reduce?"auto":"smooth",blo
 $("share").onclick=async()=>{
   const rows=guesses.map((g,i)=>{const d=Math.abs(g-answer);return d<=WIN?"🟩":d<=25?"🟧":d<=90?"🟨":"🟦";}).join("");
   const won=Math.abs(guesses[guesses.length-1]-answer)<=WIN;
-  const txt=`Hazedle Malaysia, ${cur.name} ${DAY.key}: ${won?guesses.length:"X"}/${MAX}\n${rows}`;
+  const txt=`Hazedle Malaysia, ${cur.name} ${DAY.key}: ${won?guesses.length:"X"}/${MAX}\n${rows}\nhttps://irisyann.github.io/hazedle/`;
   try{ await navigator.clipboard.writeText(txt); $("share").textContent="Copied!"; }
   catch(e){ $("share").textContent="Couldn't copy"; }
   setTimeout(()=>$("share").textContent="Share",1600);
